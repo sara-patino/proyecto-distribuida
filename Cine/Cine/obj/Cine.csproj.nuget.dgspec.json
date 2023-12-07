@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\sara.patiño\\Documents\\Distribuida\\proyecto-distribuida\\Cine\\Cine\\Cine.csproj": {}
+    "C:\\Users\\Franklin.Lopez\\Desktop\\proyecto-distribuida\\Cine\\Cine\\Cine.csproj": {}
   },
   "projects": {
-    "C:\\Users\\sara.patiño\\Documents\\Distribuida\\proyecto-distribuida\\Cine\\Cine\\Cine.csproj": {
+    "C:\\Users\\Franklin.Lopez\\Desktop\\proyecto-distribuida\\Cine\\Cine\\Cine.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\sara.patiño\\Documents\\Distribuida\\proyecto-distribuida\\Cine\\Cine\\Cine.csproj",
+        "projectUniqueName": "C:\\Users\\Franklin.Lopez\\Desktop\\proyecto-distribuida\\Cine\\Cine\\Cine.csproj",
         "projectName": "Cine",
-        "projectPath": "C:\\Users\\sara.patiño\\Documents\\Distribuida\\proyecto-distribuida\\Cine\\Cine\\Cine.csproj",
-        "packagesPath": "C:\\Users\\sara.patiño\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\sara.patiño\\Documents\\Distribuida\\proyecto-distribuida\\Cine\\Cine\\obj\\",
+        "projectPath": "C:\\Users\\Franklin.Lopez\\Desktop\\proyecto-distribuida\\Cine\\Cine\\Cine.csproj",
+        "packagesPath": "C:\\Users\\Franklin.Lopez\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Franklin.Lopez\\Desktop\\proyecto-distribuida\\Cine\\Cine\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\sara.patiño\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Franklin.Lopez\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -79,6 +79,10 @@
             "Microsoft.VisualStudio.Web.CodeGeneration.Design": {
               "target": "Package",
               "version": "[8.0.0, )"
+            },
+            "MySql.Data": {
+              "target": "Package",
+              "version": "[8.2.0, )"
             },
             "Swashbuckle.AspNetCore": {
               "target": "Package",

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Cine.Models;
+using MySql.Data.MySqlClient;
 
 namespace Cine.Controllers
 {
@@ -14,94 +15,231 @@ namespace Cine.Controllers
     public class UsersController : ControllerBase
     {
         private readonly UserContext _context;
+        private readonly Connection _dbConnection;
 
         public UsersController(UserContext context)
         {
             _context = context;
+            _dbConnection = new Connection();
         }
 
-        // GET: api/Users
+        // GET: api/User
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<User>>> GetUserItems()
+        public async Task<ActionResult<IEnumerable<User>>> GetUser()
         {
-            return await _context.UserItems.ToListAsync();
+            try
+            {
+                using (MySqlConnection connection = _dbConnection.Connect())
+                {
+                    if (connection != null)
+                    {
+                        using (MySqlCommand cmd = new MySqlCommand())
+                        {
+                            cmd.Connection = connection;
+                            cmd.CommandText = "SELECT * FROM users";
+
+                            using (MySqlDataReader reader = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                            {
+                                List<User> users = new List<User>();
+
+                                while (await reader.ReadAsync())
+                                {
+                                    User user = new User
+                                    {
+                                        Id = Convert.ToInt32(reader["Id"]),
+                                        name = reader["name"].ToString(),
+                                        email = reader["email"].ToString(),
+                                        // Asegúrate de ajustar los tipos y nombres de columnas según tu esquema
+                                    };
+
+                                    users.Add(user);
+                                }
+
+                                return users;
+                            }
+                        }
+                    }
+                }
+                return NotFound(); // O un valor predeterminado según tus necesidades
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return StatusCode(500, "Internal Server Error");
+            }
         }
+
 
         // GET: api/Users/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUser(long id)
+        public async Task<ActionResult<User>> GetUsers(int id)
         {
-            var user = await _context.UserItems.FindAsync(id);
-
-            if (user == null)
+            try
             {
-                return NotFound();
-            }
+                using (MySqlConnection connection = _dbConnection.Connect())
+                {
+                    if (connection != null)
+                    {
+                        using (MySqlCommand cmd = new MySqlCommand())
+                        {
+                            cmd.Connection = connection;
+                            cmd.CommandText = "SELECT * FROM users WHERE Id = @Id";
+                            cmd.Parameters.AddWithValue("@Id", id);
 
-            return user;
+                            using (MySqlDataReader reader = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                            {
+                                if (await reader.ReadAsync())
+                                {
+                                    User user = new User
+                                    {
+                                        Id = Convert.ToInt32(reader["Id"]),
+                                        name = reader["name"].ToString(),
+                                        email = reader["email"].ToString(),
+                                        // Asegúrate de ajustar los tipos y nombres de columnas según tu esquema
+                                    };
+
+                                    return user;
+                                }
+                                else
+                                {
+                                    return NotFound();
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Agrega un return en caso de que no haya datos o haya un problema con la conexión
+                return NotFound(); // O un valor predeterminado según tus necesidades
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return StatusCode(500, "Internal Server Error");
+            }
         }
 
-        // PUT: api/Users/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+
+        // POST: api/USer
+        [HttpPost]
+        public async Task<ActionResult<User>> PostUser(User user)
+        {
+            try
+            {
+                using (MySqlConnection connection = _dbConnection.Connect())
+                {
+                    if (connection != null)
+                    {
+                        using (MySqlCommand cmd = new MySqlCommand())
+                        {
+                            cmd.Connection = connection;
+                            cmd.CommandText = "INSERT INTO users (name, email) VALUES (@name, @email)";
+                            cmd.Parameters.AddWithValue("@name", user.name);
+                            cmd.Parameters.AddWithValue("@email", user.email);
+
+                            await cmd.ExecuteNonQueryAsync();
+                        }
+                    }
+                }
+
+                return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return StatusCode(500, "Internal Server Error");
+            }
+        }
+
+        // PUT: api/User/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutUser(long id, User user)
+        public async Task<IActionResult> PutUsers(int id, User user)
         {
             if (id != user.Id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(user).State = EntityState.Modified;
-
             try
             {
-                await _context.SaveChangesAsync();
+                using (MySqlConnection connection = _dbConnection.Connect())
+                {
+                    if (connection != null)
+                    {
+                        using (MySqlCommand cmd = new MySqlCommand())
+                        {
+                            cmd.Connection = connection;
+                            cmd.CommandText = "UPDATE user SET name = @name, email = @email WHERE Id = @Id";
+                            cmd.CommandText = "INSERT INTO user (name, email) VALUES (@name, @email)";
+                            cmd.Parameters.AddWithValue("@name", user.name);
+                            cmd.Parameters.AddWithValue("@email", user.email);
+
+                            await cmd.ExecuteNonQueryAsync();
+                        }
+                    }
+                }
+
+                return NoContent();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (Exception ex)
             {
-                if (!UserExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                Console.WriteLine(ex.Message);
+                return StatusCode(500, "Internal Server Error");
             }
-
-            return NoContent();
         }
 
-        // POST: api/Users
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<User>> PostUser(User user)
-        {
-            _context.UserItems.Add(user);
-            await _context.SaveChangesAsync();
-            //    return CreatedAtAction("GetTodoItem", new { id = todoItem.Id }, todoItem);
-            return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
-        }
 
         // DELETE: api/Users/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(long id)
+        public async Task<IActionResult> DeleteUser(int id)
         {
-            var user = await _context.UserItems.FindAsync(id);
-            if (user == null)
+            try
             {
-                return NotFound();
+                using (MySqlConnection connection = _dbConnection.Connect())
+                {
+                    if (connection != null)
+                    {
+                        using (MySqlCommand cmd = new MySqlCommand())
+                        {
+                            cmd.Connection = connection;
+                            cmd.CommandText = "SELECT * FROM users WHERE Id = @Id";
+                            cmd.Parameters.AddWithValue("@Id", id);
+
+                            using (MySqlDataReader reader = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                            {
+                                if (await reader.ReadAsync())
+                                {
+                                    // User found, proceed with deletion
+                                    reader.Close();
+
+                                    cmd.CommandText = "DELETE FROM users WHERE Id = @Id";
+                                    await cmd.ExecuteNonQueryAsync();
+
+                                    return NoContent();
+                                }
+                                else
+                                {
+                                    return NotFound();
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Agrega un return en caso de que no haya datos o haya un problema con la conexión
+                return NotFound(); // O un valor predeterminado según tus necesidades
             }
-
-            _context.UserItems.Remove(user);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return StatusCode(500, "Internal Server Error");
+            }
         }
 
-        private bool UserExists(long id)
+
+        private bool UserExists(int id)
         {
-            return _context.UserItems.Any(e => e.Id == id);
+            return _context.Users.Any(e => e.Id == id);
         }
     }
 }

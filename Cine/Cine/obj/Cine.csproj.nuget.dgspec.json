@@ -1,20 +1,24 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Franklin.Lopez\\Desktop\\proyecto-distribuida\\Cine\\Cine\\Cine.csproj": {}
+    "C:\\Users\\aisha\\Source\\Repos\\proyecto-distribuida\\Cine\\Cine\\Cine.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Franklin.Lopez\\Desktop\\proyecto-distribuida\\Cine\\Cine\\Cine.csproj": {
+    "C:\\Users\\aisha\\Source\\Repos\\proyecto-distribuida\\Cine\\Cine\\Cine.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Franklin.Lopez\\Desktop\\proyecto-distribuida\\Cine\\Cine\\Cine.csproj",
+        "projectUniqueName": "C:\\Users\\aisha\\Source\\Repos\\proyecto-distribuida\\Cine\\Cine\\Cine.csproj",
         "projectName": "Cine",
-        "projectPath": "C:\\Users\\Franklin.Lopez\\Desktop\\proyecto-distribuida\\Cine\\Cine\\Cine.csproj",
-        "packagesPath": "C:\\Users\\Franklin.Lopez\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Franklin.Lopez\\Desktop\\proyecto-distribuida\\Cine\\Cine\\obj\\",
+        "projectPath": "C:\\Users\\aisha\\Source\\Repos\\proyecto-distribuida\\Cine\\Cine\\Cine.csproj",
+        "packagesPath": "C:\\Users\\aisha\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\aisha\\Source\\Repos\\proyecto-distribuida\\Cine\\Cine\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\Franklin.Lopez\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\aisha\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -39,56 +43,6 @@
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
-          "dependencies": {
-            "Microsoft.AspNetCore.Authentication.JwtBearer": {
-              "target": "Package",
-              "version": "[8.0.0, )",
-              "noWarn": [
-                "NU1605"
-              ]
-            },
-            "Microsoft.AspNetCore.Authentication.OpenIdConnect": {
-              "target": "Package",
-              "version": "[8.0.0, )",
-              "noWarn": [
-                "NU1605"
-              ]
-            },
-            "Microsoft.AspNetCore.Components.QuickGrid.EntityFrameworkAdapter": {
-              "target": "Package",
-              "version": "[8.0.0, )"
-            },
-            "Microsoft.EntityFrameworkCore.InMemory": {
-              "target": "Package",
-              "version": "[8.0.0, )"
-            },
-            "Microsoft.EntityFrameworkCore.Tools": {
-              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
-              "suppressParent": "All",
-              "target": "Package",
-              "version": "[8.0.0, )"
-            },
-            "Microsoft.Identity.Web": {
-              "target": "Package",
-              "version": "[2.15.2, )"
-            },
-            "Microsoft.Identity.Web.DownstreamApi": {
-              "target": "Package",
-              "version": "[2.15.2, )"
-            },
-            "Microsoft.VisualStudio.Web.CodeGeneration.Design": {
-              "target": "Package",
-              "version": "[8.0.0, )"
-            },
-            "MySql.Data": {
-              "target": "Package",
-              "version": "[8.2.0, )"
-            },
-            "Swashbuckle.AspNetCore": {
-              "target": "Package",
-              "version": "[6.4.0, )"
-            }
-          },
           "imports": [
             "net461",
             "net462",
@@ -100,15 +54,7 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
-          "frameworkReferences": {
-            "Microsoft.AspNetCore.App": {
-              "privateAssets": "none"
-            },
-            "Microsoft.NETCore.App": {
-              "privateAssets": "all"
-            }
-          },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.100/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.403\\RuntimeIdentifierGraph.json"
         }
       }
     }

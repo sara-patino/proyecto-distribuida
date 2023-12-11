@@ -1,247 +1,228 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Cine.Models;
-using MySql.Data.MySqlClient;
 
-namespace Cine.Controllers
+[Route("api/[controller]")]
+[ApiController]
+public class ReservationsController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class RervationsController : ControllerBase
+    private readonly ReservationContext _context;
+
+    public ReservationsController(ReservationContext context)
     {
-        private readonly ReservationContext _context;
-        private readonly Connection _dbConnection;
+        _context = context;
+    }
 
-        public ReservationsController(ReservationContext context)
+    // GET: api/Reservations
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<Reservation>>> GetReservations()
+    {
+        try
         {
-            _context = context;
-            _dbConnection = new Connection();
+            var reservations = await _context.Reservations
+                .Include(r => r.Seats) // Incluye los asientos relacionados
+                .ToListAsync();
+
+            return Ok(reservations);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return StatusCode(500, "Internal Server Error");
+        }
+    }
+
+    // GET: api/Reservations/5
+    [HttpGet("{id}")]
+    public async Task<ActionResult<Reservation>> GetReservation(int id)
+    {
+        try
+        {
+            var reservation = await _context.Reservations
+                .Include(r => r.Seats) // Incluye los asientos relacionados
+                .FirstOrDefaultAsync(r => r.Id == id);
+
+            if (reservation == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(reservation);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return StatusCode(500, "Internal Server Error");
+        }
+    }
+    // POST: api/Reservations
+    [HttpPost]
+    public async Task<ActionResult<Reservation>> PostReservation(Reservation reservation)
+    {
+        try
+        {
+            // Verifica si la sala existe
+            var roomExists = await _context.Rooms.AnyAsync(r => r.Id == reservation.RoomId);
+            if (!roomExists)
+            {
+                return BadRequest("La sala no existe.");
+            }
+
+            // Verifica si la película existe
+            var movieExists = await _context.Movies.AnyAsync(m => m.Id == reservation.MovieId);
+            if (!movieExists)
+            {
+                return BadRequest("La película no existe.");
+            }
+
+            _context.Reservations.Add(reservation);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetReservation), new { id = reservation.Id }, reservation);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return StatusCode(500, "Internal Server Error");
+        }
+    }
+
+
+    // PUT: api/Reservations/5
+    [HttpPut("{id}")]
+    public async Task<IActionResult> PutReservation(int id, Reservation reservation)
+    {
+        if (id != reservation.Id)
+        {
+            return BadRequest("ID mismatch");
         }
 
-        // GET: api/Reservations
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Reservation>>> GetReservations()
+        try
         {
-            try
-            {
-                using (MySqlConnection connection = _dbConnection.Connect())
-                {
-                    if (connection != null)
-                    {
-                        using (MySqlCommand cmd = new MySqlCommand())
-                        {
-                            cmd.Connection = connection;
-                            cmd.CommandText = "SELECT * FROM reservations";
+            _context.Entry(reservation).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
 
-                            using (MySqlDataReader reader = (MySqlDataReader)await cmd.ExecuteReaderAsync())
-                            {
-                                List<Reservation> reservations = new List<Reservation>();
-
-                                while (await reader.ReadAsync())
-                                {
-                                    Reservation reservation = new Reservation
-                                    {
-                                        Id = Convert.ToInt32(reader["Id"]),
-                                        Movie = reader["movie"].ToString(),
-                                        User = reader["User"].ToString(),
-                                        Seat = reader["seat"].ToString()
-                                    };
-
-                                    reservation.Add(reservation);
-                                }
-
-                                return reservation;
-                            }
-                        }
-                    }
-                }
-                return NotFound(); // O un valor predeterminado según tus necesidades
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-                return StatusCode(500, "Internal Server Error");
-            }
+            return NoContent();
         }
-
-
-        // GET: api/Reservation/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Reservation>> GetReservation(int id)
+        catch (Exception ex)
         {
-            try
-            {
-                using (MySqlConnection connection = _dbConnection.Connect())
-                {
-                    if (connection != null)
-                    {
-                        using (MySqlCommand cmd = new MySqlCommand())
-                        {
-                            cmd.Connection = connection;
-                            cmd.CommandText = "SELECT * FROM reservations WHERE Id = @Id";
-                            cmd.Parameters.AddWithValue("@Id", id);
-
-                            using (MySqlDataReader reader = (MySqlDataReader)await cmd.ExecuteReaderAsync())
-                            {
-                                if (await reader.ReadAsync())
-                                {
-                                    Reservation reservation = new Reservation
-                                    {
-                                        Id = Convert.ToInt32(reader["Id"]),
-                                        Movie = reader["movie"].ToString(),
-                                        User = reader["User"].ToString(),
-                                        Seat = reader["seat"].ToString()
-                                    };
-
-                                    return reservation;
-                                }
-                                else
-                                {
-                                    return NotFound();
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Agrega un return en caso de que no haya datos o haya un problema con la conexión
-                return NotFound(); // O un valor predeterminado según tus necesidades
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-                return StatusCode(500, "Internal Server Error");
-            }
+            Console.WriteLine(ex.Message);
+            return StatusCode(500, "Internal Server Error");
         }
+    }
 
-
-        // POST: api/Reservation
-        [HttpPost]
-        public async Task<ActionResult<Reservation>> PostReservation(Reservation reservation)
+    // DELETE: api/Reservations/5
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteReservation(int id)
+    {
+        try
         {
-            try
-            {
-                using (MySqlConnection connection = _dbConnection.Connect())
-                {
-                    if (connection != null)
-                    {
-                        using (MySqlCommand cmd = new MySqlCommand())
-                        {
-                            cmd.Connection = connection;
-                            cmd.CommandText = "INSERT INTO reservations (movie, user, seat) VALUES (@movie, @user, @seat)";
-                            cmd.Parameters.AddWithValue("@movie", reservation.movie);
-                            cmd.Parameters.AddWithValue("@user", reservation.user);
-                            cmd.Parameters.AddWithValue("@seat", reservation.seat);
+            var reservation = await _context.Reservations.FindAsync(id);
 
-                            await cmd.ExecuteNonQueryAsync();
-                        }
-                    }
-                }
-
-                return CreatedAtAction(nameof(GetReservation), new { id = reservation.Id }, reservation);
-            }
-            catch (Exception ex)
+            if (reservation == null)
             {
-                Console.WriteLine(ex.Message);
-                return StatusCode(500, "Internal Server Error");
+                return NotFound();
             }
+
+            _context.Reservations.Remove(reservation);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
-
-        // PUT: api/Reservations/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutReservation(int id, Reservation reservation)
+        catch (Exception ex)
         {
-            if (id != reservation.Id)
-            {
-                return BadRequest();
-            }
-
-            try
-            {
-                using (MySqlConnection connection = _dbConnection.Connect())
-                {
-                    if (connection != null)
-                    {
-                        using (MySqlCommand cmd = new MySqlCommand())
-                        {
-                            cmd.Connection = connection;
-                            cmd.CommandText = "UPDATE reservations SET movie = @movie, user = @user, seat = @seat WHERE Id = @Id";
-                            cmd.Parameters.AddWithValue("@Id", id);
-                            cmd.Parameters.AddWithValue("@movie", reservation.movie);
-                            cmd.Parameters.AddWithValue("@user", reservation.user);
-                            cmd.Parameters.AddWithValue("@seat", reservation.seat);
-
-                            await cmd.ExecuteNonQueryAsync();
-                        }
-                    }
-                }
-
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-                return StatusCode(500, "Internal Server Error");
-            }
+            Console.WriteLine(ex.Message);
+            return StatusCode(500, "Internal Server Error");
         }
+    }
 
-
-        // DELETE: api/Reservations/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteReservation(int id)
+    // POST: api/Reservations/CheckAvailability
+    [HttpPost("CheckAvailability")]
+    public async Task<ActionResult<bool>> CheckSeatAvailability([FromBody] Seat seat)
+    {
+        try
         {
-            try
-            {
-                using (MySqlConnection connection = _dbConnection.Connect())
-                {
-                    if (connection != null)
-                    {
-                        using (MySqlCommand cmd = new MySqlCommand())
-                        {
-                            cmd.Connection = connection;
-                            cmd.CommandText = "SELECT * FROM reservations WHERE Id = @Id";
-                            cmd.Parameters.AddWithValue("@Id", id);
+            // Verifica si el asiento está disponible para la sala y película específicas
+            var isSeatAvailable = await _context.Seats
+                .Where(s => s.Row == seat.Row && s.Columnn == seat.Columnn)
+                .AllAsync(s => s.ReservationId == null);
 
-                            using (MySqlDataReader reader = (MySqlDataReader)await cmd.ExecuteReaderAsync())
-                            {
-                                if (await reader.ReadAsync())
-                                {
-                                    // reservation found, proceed with deletion
-                                    reader.Close();
-
-                                    cmd.CommandText = "DELETE FROM reservations WHERE Id = @Id";
-                                    await cmd.ExecuteNonQueryAsync();
-
-                                    return NoContent();
-                                }
-                                else
-                                {
-                                    return NotFound();
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Agrega un return en caso de que no haya datos o haya un problema con la conexión
-                return NotFound(); // O un valor predeterminado según tus necesidades
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-                return StatusCode(500, "Internal Server Error");
-            }
+            return Ok(isSeatAvailable);
         }
-
-
-        private bool ReservationExists(int id)
+        catch (Exception ex)
         {
-            return _context.Reservations.Any(e => e.Id == id);
+            Console.WriteLine(ex.Message);
+            return StatusCode(500, "Internal Server Error");
         }
+    }
+
+    // GET: api/Reservations/SeatsForSingleMovie/{movieId}
+    [HttpGet("SeatsForSingleMovie/{movieId}")]
+    public async Task<ActionResult<IEnumerable<Seat>>> GetSeatsForSingleMovie(int movieId)
+    {
+        try
+        {
+            // Obtén todas las reservas que tengan la película específica y carga explícitamente las relaciones necesarias
+            var reservations = await _context.Reservations
+                .Include(r => r.Seats) // Asegúrate de incluir las relaciones de asientos
+                .Where(r => r.MovieId == movieId)
+                .ToListAsync();
+
+            // Obtén los asientos de esas reservas (incluso si no hay reservas)
+            var seats = reservations
+                .SelectMany(r => r.Seats)
+                .ToList();
+
+            // Retorna directamente los asientos, incluso si es un array vacío
+            return Ok(seats);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return StatusCode(500, "Internal Server Error");
+        }
+    }
+
+    // DELETE: api/Reservations/DeleteAllForMovie/{movieId}
+    [HttpDelete("DeleteAllForMovie/{movieId}")]
+    public async Task<ActionResult<IEnumerable<Seat>>> DeleteAllForMovie(int movieId)
+    {
+        try
+        {
+            // Obtén todas las reservas asociadas a la película específica
+            var reservationsToDelete = await _context.Reservations
+                .Include(r => r.Seats)  // Incluye las seats asociadas a cada reserva
+                .Where(r => r.MovieId == movieId)
+                .ToListAsync();
+
+            if (reservationsToDelete == null || !reservationsToDelete.Any())
+            {
+                return NotFound($"No hay reservas para la película con ID {movieId}.");
+            }
+
+            // Elimina las seats asociadas a cada reserva
+            foreach (var reservation in reservationsToDelete)
+            {
+                _context.Seats.RemoveRange(reservation.Seats);
+            }
+
+            // Elimina las reservas
+            _context.Reservations.RemoveRange(reservationsToDelete);
+            await _context.SaveChangesAsync();
+
+            // Devuelve un array vacío
+            return Ok(new List<Seat>());
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return StatusCode(500, "Internal Server Error");
+        }
+    }
+
+
+    private bool ReservationExists(int id)
+    {
+        return _context.Reservations.Any(e => e.Id == id);
     }
 }

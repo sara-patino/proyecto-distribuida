@@ -13,7 +13,8 @@ namespace Cine.Models
             _connectionString = "server=localhost; database=cine; user=root; password=";
         }
 
-        public DbSet<Movie> Movies { get; set; } = null!;
+        public DbSet<Movies> Movies { get; set; } = null!;
+        public DbSet<Rooms> Rooms { get; set; } = null!;
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

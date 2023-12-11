@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static Org.BouncyCastle.Crypto.Engines.SM2Engine;
 
 [Route("api/[controller]")]
 [ApiController]
@@ -19,7 +20,7 @@ public class MoviesController : ControllerBase
 
     // GET: api/Movies
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Movie>>> GetMovies()
+    public async Task<ActionResult<IEnumerable<Movies>>> GetMovies()
     {
         try
         {
@@ -35,11 +36,11 @@ public class MoviesController : ControllerBase
 
     // GET: api/Movies/5
     [HttpGet("{id}")]
-    public async Task<ActionResult<Movie>> GetMovie(int id)
+    public async Task<ActionResult<Movies>> GetMovie(int id)
     {
         try
         {
-            var movie = await _context.Movies.FindAsync(id);
+            var movie = await _context.Movies.FirstOrDefaultAsync(m => m.Id == id);
 
             if (movie == null)
             {
@@ -57,13 +58,20 @@ public class MoviesController : ControllerBase
 
     // POST: api/Movies
     [HttpPost]
-    public async Task<ActionResult<Movie>> PostMovie(Movie movie)
+    public async Task<ActionResult<Movies>> PostMovie(Movies movie)
     {
         try
         {
+            // Asegúrate de que la sala asociada existe
+            if (!_context.Rooms.Any(r => r.Id == movie.RoomId))
+            {
+                return NotFound("Sala no encontrada");
+            }
+
             _context.Movies.Add(movie);
             await _context.SaveChangesAsync();
 
+            // Devuelve CreatedAtAction con el nuevo objeto Movie y su Id generado
             return CreatedAtAction(nameof(GetMovie), new { id = movie.Id }, movie);
         }
         catch (Exception ex)
@@ -75,19 +83,36 @@ public class MoviesController : ControllerBase
 
     // PUT: api/Movies/5
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutMovie(int id, Movie movie)
+    public async Task<IActionResult> PutMovie(int id, Movies movie)
     {
         if (id != movie.Id)
         {
-            return BadRequest();
+            return BadRequest("ID mismatch");
         }
 
         try
         {
+            // Asegúrate de que la sala asociada existe
+            if (!_context.Rooms.Any(r => r.Id == movie.RoomId))
+            {
+                return NotFound("Sala no encontrada");
+            }
+
             _context.Entry(movie).State = EntityState.Modified;
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!MovieExists(id))
+            {
+                return NotFound();
+            }
+            else
+            {
+                throw;
+            }
         }
         catch (Exception ex)
         {
